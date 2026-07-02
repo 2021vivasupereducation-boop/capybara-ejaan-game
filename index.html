@@ -712,8 +712,12 @@
     const cheers = ["太棒了！水豚过河啦！", "答对了！收集 1 个小橙子！", "Nice! 继续冲下一题！", "好厉害，ejaan 越来越稳！", "Combo! 水豚开心跳一下！"];
 
     const $ = (id) => document.getElementById(id);
-    const normalize = (value) => value.toLowerCase().replace(/\s+/g, " ").trim();
-    const acceptedAnswers = (word) => word.split("=").map(part => normalize(part));
+    const normalize = (value) => value.toLowerCase().replace(/\s*=\s*/g, "=").replace(/\s+/g, " ").trim();
+    const acceptedAnswers = (word) => {
+      const full = normalize(word);
+      const parts = word.split("=").map(part => normalize(part));
+      return [...new Set([full, ...parts])];
+    };
 
     function ensureAudio() {
       if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
