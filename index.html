@@ -768,8 +768,8 @@
         <span class="hamburger" aria-hidden="true"><span></span><span></span><span></span></span>
       </button>
       <div class="brand">
-        <h1>水豚 Ejaan 小游戏</h1>
-        <div class="tagline">读一读 · 拼一拼 · 过河去！</div>
+        <h1>7月 Week 4 水豚 Ejaan 闯关</h1>
+        <div class="tagline">读一读 · 找一找 · 拼一拼 · 过河去！</div>
       </div>
       <div class="score" aria-live="polite">
         <small>得分</small>
@@ -778,7 +778,7 @@
     </header>
 
     <section class="progress-card" aria-label="进度">
-      <div class="progress-label" id="progressLabel">进度 1 / 17</div>
+      <div class="progress-label" id="progressLabel">进度 1 / 11</div>
       <div id="dots" class="dots" style="display:contents"></div>
     </section>
 
@@ -861,7 +861,7 @@
 
       <section class="word-list" id="wordList">
         <div class="list-head">
-          <h2>单词列表（共 17 题）</h2>
+          <h2>单词列表（共 11 题）</h2>
           <button class="toggle" id="toggleWords">展开</button>
         </div>
         <div class="words hidden" id="words"></div>
@@ -889,23 +889,17 @@
 
   <script>
     const baseWords = [
-      { word: "Berbentuk", meaning: "形状", pinyin: "xíng zhuàng" },
-      { word: "Membubuh baja", meaning: "施肥", pinyin: "shī féi" },
-      { word: "Mencantikkan", meaning: "美化", pinyin: "měi huà" },
-      { word: "Menghidangkan", meaning: "端食物", pinyin: "duān shí wù" },
-      { word: "Jejantas", meaning: "行人天桥", pinyin: "xíng rén tiān qiáo" },
-      { word: "Melintas jalan", meaning: "过马路", pinyin: "guò mǎ lù" },
-      { word: "Pelanggan", meaning: "顾客", pinyin: "gù kè" },
-      { word: "Sagu hati", meaning: "安慰奖", pinyin: "ān wèi jiǎng" },
-      { word: "Balai raya", meaning: "民众会堂", pinyin: "mín zhòng huì táng" },
-      { word: "Kasut getah", meaning: "橡胶鞋", pinyin: "xiàng jiāo xié" },
-      { word: "Alat tulis", meaning: "文具", pinyin: "wén jù" },
-      { word: "Mengikat", meaning: "绑", pinyin: "bǎng" },
-      { word: "Menjemput = mengajak", meaning: "邀请", pinyin: "yāo qǐng" },
-      { word: "Mengumpul", meaning: "收集", pinyin: "shōu jí" },
-      { word: "Memeriksa", meaning: "检查", pinyin: "jiǎn chá" },
-      { word: "Mendirikan khemah", meaning: "搭帐篷", pinyin: "dā zhàng péng" },
-      { word: "Mengadakan = menganjurkan", meaning: "举办", pinyin: "jǔ bàn" }
+      { word: "siapa", meaning: "谁", pinyin: "shuí" },
+      { word: "bila", meaning: "几时", pinyin: "jǐ shí" },
+      { word: "mengapa", meaning: "为什么", pinyin: "wèi shén me" },
+      { word: "berapa", meaning: "多少", pinyin: "duō shǎo" },
+      { word: "harga", meaning: "价钱", pinyin: "jià qián" },
+      { word: "jumlah", meaning: "总共", pinyin: "zǒng gòng" },
+      { word: "apa", meaning: "什么", pinyin: "shén me" },
+      { word: "sila", meaning: "请", pinyin: "qǐng" },
+      { word: "jangan", meaning: "不要", pinyin: "bú yào" },
+      { word: "tolong", meaning: "帮忙", pinyin: "bāng máng" },
+      { word: "jemput", meaning: "邀请", pinyin: "yāo qǐng" }
     ];
 
     let words = [...baseWords];
