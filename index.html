@@ -154,6 +154,48 @@
     .dot.done { background: #dff0b1; border-color: #75b75b; }
     .dot.current { background: #fff7ce; border-color: #49a34c; box-shadow: 0 0 0 5px rgba(80, 160, 70, .18); }
 
+    .mission-bar {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .mission-chip {
+      min-height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border: 3px solid #e3b253;
+      border-radius: 24px;
+      background: rgba(255, 253, 247, .93);
+      box-shadow: 0 6px 0 rgba(142, 93, 30, .16);
+      font-weight: 900;
+      color: #5d3b21;
+      text-align: center;
+      min-width: 0;
+    }
+
+    .mission-chip span {
+      font-size: 28px;
+      line-height: 1;
+    }
+
+    .mission-chip strong {
+      display: block;
+      font-size: 24px;
+      line-height: 1.1;
+    }
+
+    .mission-chip small {
+      display: block;
+      margin-top: 2px;
+      font-size: 14px;
+      color: #8a5d25;
+    }
+
     .river-scene {
       position: relative;
       min-height: 340px;
@@ -358,6 +400,65 @@
     .feedback.good { color: #318338; }
     .feedback.bad { color: #c94a3f; }
 
+    .answer-panel.shake {
+      animation: shake .3s ease;
+    }
+
+    .celebration {
+      position: fixed;
+      inset: auto 18px 24px;
+      z-index: 20;
+      display: none;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    .celebration.show {
+      display: flex;
+      animation: popIn .75s ease both;
+    }
+
+    .celebration-card {
+      max-width: 640px;
+      padding: 18px 24px;
+      border: 4px solid #f0ad34;
+      border-radius: 28px;
+      background: #fff8dd;
+      color: #5a351d;
+      box-shadow: 0 14px 0 rgba(142, 93, 30, .18), 0 22px 42px rgba(90, 55, 24, .24);
+      font-size: clamp(20px, 4vw, 34px);
+      font-weight: 900;
+      text-align: center;
+    }
+
+    .spark {
+      position: fixed;
+      z-index: 19;
+      top: 18%;
+      font-size: 28px;
+      animation: sparkle 1s ease-out forwards;
+      pointer-events: none;
+    }
+
+    @keyframes popIn {
+      0% { transform: translateY(16px) scale(.92); opacity: 0; }
+      22% { transform: translateY(0) scale(1.04); opacity: 1; }
+      100% { transform: translateY(0) scale(1); opacity: 1; }
+    }
+
+    @keyframes sparkle {
+      0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+      20% { opacity: 1; }
+      100% { transform: translateY(210px) rotate(210deg); opacity: 0; }
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-8px); }
+      50% { transform: translateX(8px); }
+      75% { transform: translateX(-5px); }
+    }
+
     .word-list {
       border: 3px solid #e4bf75;
       border-radius: 28px;
@@ -451,6 +552,11 @@
 
       .score small { font-size: 12px; }
       .score strong { font-size: 24px; }
+      .mission-bar { grid-template-columns: 1fr; gap: 9px; }
+      .mission-chip { min-height: 58px; border-radius: 18px; padding: 8px; gap: 7px; }
+      .mission-chip span { font-size: 22px; }
+      .mission-chip strong { font-size: 18px; }
+      .mission-chip small { font-size: 12px; }
       .progress-label { font-size: 16px; padding: 10px 14px; }
       .dot { width: 35px; height: 35px; font-size: 15px; }
       .river-scene { min-height: 250px; border-radius: 24px; }
@@ -490,6 +596,12 @@
     <section class="progress-card" aria-label="进度">
       <div class="progress-label" id="progressLabel">进度 1 / 17</div>
       <div id="dots" class="dots" style="display:contents"></div>
+    </section>
+
+    <section class="mission-bar" aria-label="游戏奖励">
+      <div class="mission-chip"><span>🍊</span><div><strong id="snacks">0</strong><small>收集小橙子</small></div></div>
+      <div class="mission-chip"><span>🔥</span><div><strong id="streak">0 连对</strong><small>Combo 奖励</small></div></div>
+      <button class="mission-chip" id="shuffleBtn" type="button"><span>🎲</span><div><strong>打乱挑战</strong><small>换个顺序玩</small></div></button>
     </section>
 
     <section class="river-scene" aria-label="水豚过河路线">
@@ -562,8 +674,12 @@
     </main>
   </div>
 
+  <div class="celebration" id="celebration" aria-live="polite">
+    <div class="celebration-card" id="celebrationText">太棒了！</div>
+  </div>
+
   <script>
-    const words = [
+    const baseWords = [
       { word: "Berbentuk", meaning: "形状", pinyin: "xíng zhuàng" },
       { word: "Membubuh baja", meaning: "施肥", pinyin: "shī féi" },
       { word: "Mencantikkan", meaning: "美化", pinyin: "měi huà" },
@@ -583,10 +699,14 @@
       { word: "Mengadakan = menganjurkan", meaning: "举办", pinyin: "jǔ bàn" }
     ];
 
+    let words = [...baseWords];
     let index = 0;
     let score = 0;
+    let streak = 0;
+    let snacks = 0;
     let answered = new Set();
     let showingWords = true;
+    const cheers = ["太棒了！水豚过河啦！", "答对了！收集 1 个小橙子！", "Nice! 继续冲下一题！", "好厉害，ejaan 越来越稳！", "Combo! 水豚开心跳一下！"];
 
     const $ = (id) => document.getElementById(id);
     const normalize = (value) => value.toLowerCase().replace(/\s+/g, " ").trim();
@@ -628,6 +748,8 @@
       $("pinyin").textContent = `(${item.pinyin})`;
       $("progressLabel").textContent = `进度 ${index + 1} / ${words.length}`;
       $("score").textContent = score;
+      $("streak").textContent = `${streak} 连对`;
+      $("snacks").textContent = snacks;
       $("answerInput").value = "";
       $("feedback").textContent = "";
       $("feedback").className = "feedback";
@@ -636,6 +758,23 @@
       renderWords();
       updateCapy();
       $("answerInput").focus({ preventScroll: true });
+    }
+
+    function celebrate(message) {
+      $("celebrationText").textContent = message;
+      $("celebration").classList.remove("show");
+      void $("celebration").offsetWidth;
+      $("celebration").classList.add("show");
+      for (let i = 0; i < 10; i++) {
+        const spark = document.createElement("div");
+        spark.className = "spark";
+        spark.textContent = i % 3 === 0 ? "🍊" : i % 3 === 1 ? "✨" : "🌿";
+        spark.style.left = `${8 + Math.random() * 84}%`;
+        spark.style.animationDelay = `${Math.random() * .18}s`;
+        document.body.appendChild(spark);
+        window.setTimeout(() => spark.remove(), 1100);
+      }
+      window.setTimeout(() => $("celebration").classList.remove("show"), 1250);
     }
 
     function checkAnswer() {
@@ -650,15 +789,28 @@
       }
       if (ok) {
         if (!answered.has(index)) {
-          score += 10;
+          streak += 1;
+          snacks += 1;
+          score += 10 + Math.max(0, streak - 1) * 2;
           answered.add(index);
         }
-        $("feedback").textContent = "答对了！水豚前进一步。";
+        const cheer = cheers[Math.floor(Math.random() * cheers.length)];
+        $("feedback").textContent = `${cheer} +${10 + Math.max(0, streak - 1) * 2} 分`;
         $("feedback").className = "feedback good";
+        $("streak").textContent = `${streak} 连对`;
+        $("snacks").textContent = snacks;
+        celebrate(cheer);
         window.setTimeout(nextQuestion, 650);
       } else {
+        streak = 0;
+        $("streak").textContent = "0 连对";
         $("feedback").textContent = `再试一次。正确答案：${item.word}。请读 3 次。`;
         $("feedback").className = "feedback bad";
+        $("answerInput").value = "";
+        $("answerInput").placeholder = "读 3 次后，再输入一次...";
+        document.querySelector(".answer-panel").classList.remove("shake");
+        void document.querySelector(".answer-panel").offsetWidth;
+        document.querySelector(".answer-panel").classList.add("shake");
       }
       $("score").textContent = score;
     }
@@ -687,9 +839,23 @@
     }
 
     function restart() {
+      words = [...baseWords];
       index = 0;
       score = 0;
+      streak = 0;
+      snacks = 0;
       answered = new Set();
+      update();
+    }
+
+    function shuffleGame() {
+      words = [...baseWords].sort(() => Math.random() - .5);
+      index = 0;
+      score = 0;
+      streak = 0;
+      snacks = 0;
+      answered = new Set();
+      celebrate("新的路线开始啦！");
       update();
     }
 
@@ -697,6 +863,7 @@
     $("hintBtn").addEventListener("click", showHint);
     $("nextBtn").addEventListener("click", nextQuestion);
     $("restartBtn").addEventListener("click", restart);
+    $("shuffleBtn").addEventListener("click", shuffleGame);
     $("answerInput").addEventListener("keydown", (event) => {
       if (event.key === "Enter") checkAnswer();
     });
