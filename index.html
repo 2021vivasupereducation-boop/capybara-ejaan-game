@@ -156,7 +156,7 @@
 
     .mission-bar {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 12px;
       margin-top: 14px;
     }
@@ -602,6 +602,7 @@
       <div class="mission-chip"><span>🍊</span><div><strong id="snacks">0</strong><small>收集小橙子</small></div></div>
       <div class="mission-chip"><span>🔥</span><div><strong id="streak">0 连对</strong><small>Combo 奖励</small></div></div>
       <button class="mission-chip" id="shuffleBtn" type="button"><span>🎲</span><div><strong>打乱挑战</strong><small>换个顺序玩</small></div></button>
+      <button class="mission-chip" id="soundBtn" type="button"><span id="soundIcon">🔇</span><div><strong id="soundLabel">开启音效</strong><small>可爱叮咚声</small></div></button>
     </section>
 
     <section class="river-scene" aria-label="水豚过河路线">
@@ -706,11 +707,65 @@
     let snacks = 0;
     let answered = new Set();
     let showingWords = true;
+    let soundOn = false;
+    let audioCtx = null;
     const cheers = ["太棒了！水豚过河啦！", "答对了！收集 1 个小橙子！", "Nice! 继续冲下一题！", "好厉害，ejaan 越来越稳！", "Combo! 水豚开心跳一下！"];
 
     const $ = (id) => document.getElementById(id);
     const normalize = (value) => value.toLowerCase().replace(/\s+/g, " ").trim();
     const acceptedAnswers = (word) => word.split("=").map(part => normalize(part));
+
+    function ensureAudio() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === "suspended") audioCtx.resume();
+    }
+
+    function tone(freq, start, duration, type = "sine", gain = 0.055) {
+      if (!soundOn) return;
+      ensureAudio();
+      const osc = audioCtx.createOscillator();
+      const vol = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime + start);
+      vol.gain.setValueAtTime(0.0001, audioCtx.currentTime + start);
+      vol.gain.exponentialRampToValueAtTime(gain, audioCtx.currentTime + start + 0.015);
+      vol.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + start + duration);
+      osc.connect(vol).connect(audioCtx.destination);
+      osc.start(audioCtx.currentTime + start);
+      osc.stop(audioCtx.currentTime + start + duration + 0.02);
+    }
+
+    function playSound(kind) {
+      if (!soundOn) return;
+      if (kind === "correct") {
+        tone(660, 0, .12, "sine", .06);
+        tone(880, .10, .14, "sine", .055);
+        tone(1175, .22, .18, "triangle", .04);
+      } else if (kind === "wrong") {
+        tone(220, 0, .16, "triangle", .045);
+        tone(165, .13, .18, "sine", .035);
+      } else if (kind === "hint") {
+        tone(784, 0, .08, "triangle", .04);
+        tone(988, .09, .11, "triangle", .035);
+      } else if (kind === "click") {
+        tone(520, 0, .055, "sine", .025);
+      } else if (kind === "finish") {
+        [523, 659, 784, 1047].forEach((f, i) => tone(f, i * .09, .18, "triangle", .05));
+      }
+    }
+
+    function toggleSound() {
+      soundOn = !soundOn;
+      if (soundOn) {
+        ensureAudio();
+        $("soundIcon").textContent = "🔊";
+        $("soundLabel").textContent = "音效开启";
+        playSound("hint");
+      } else {
+        $("soundIcon").textContent = "🔇";
+        $("soundLabel").textContent = "开启音效";
+      }
+    }
 
     function renderDots() {
       $("dots").innerHTML = words.map((_, i) => {
@@ -799,6 +854,7 @@
         $("feedback").className = "feedback good";
         $("streak").textContent = `${streak} 连对`;
         $("snacks").textContent = snacks;
+        playSound("correct");
         celebrate(cheer);
         window.setTimeout(nextQuestion, 650);
       } else {
@@ -811,6 +867,7 @@
         document.querySelector(".answer-panel").classList.remove("shake");
         void document.querySelector(".answer-panel").offsetWidth;
         document.querySelector(".answer-panel").classList.add("shake");
+        playSound("wrong");
       }
       $("score").textContent = score;
     }
@@ -825,9 +882,11 @@
       $("hintLine").textContent = `提示：${hint}`;
       $("feedback").textContent = "看提示后，自己拼完整。";
       $("feedback").className = "feedback";
+      playSound("hint");
     }
 
     function nextQuestion() {
+      playSound("click");
       if (index < words.length - 1) {
         index += 1;
         update();
@@ -835,10 +894,12 @@
         $("feedback").textContent = `完成啦！今天得分 ${score}。可以给孩子一个小奖励。`;
         $("feedback").className = "feedback good";
         updateCapy();
+        playSound("finish");
       }
     }
 
     function restart() {
+      playSound("click");
       words = [...baseWords];
       index = 0;
       score = 0;
@@ -856,6 +917,7 @@
       snacks = 0;
       answered = new Set();
       celebrate("新的路线开始啦！");
+      playSound("hint");
       update();
     }
 
@@ -864,6 +926,7 @@
     $("nextBtn").addEventListener("click", nextQuestion);
     $("restartBtn").addEventListener("click", restart);
     $("shuffleBtn").addEventListener("click", shuffleGame);
+    $("soundBtn").addEventListener("click", toggleSound);
     $("answerInput").addEventListener("keydown", (event) => {
       if (event.key === "Enter") checkAnswer();
     });
