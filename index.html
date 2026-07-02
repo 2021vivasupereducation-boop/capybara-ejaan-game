@@ -343,6 +343,21 @@
       gap: 14px;
     }
 
+    .mode-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      margin-bottom: 14px;
+      padding: 8px 18px;
+      border: 3px solid #e4bf75;
+      border-radius: 999px;
+      background: #fff8e8;
+      color: #6c4525;
+      font-size: clamp(16px, 3vw, 22px);
+      font-weight: 900;
+    }
+
     input {
       width: 100%;
       min-height: 72px;
@@ -358,6 +373,54 @@
 
     input:focus {
       box-shadow: 0 0 0 6px rgba(94, 173, 87, .18);
+    }
+
+    .choice-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+
+    .choice-option {
+      min-height: 76px;
+      padding: 12px 16px;
+      border: 4px solid #e4bf75;
+      border-radius: 22px;
+      background: #fff8e8;
+      color: #4a2f1d;
+      font-size: clamp(20px, 3.4vw, 30px);
+      font-weight: 900;
+      line-height: 1.15;
+      cursor: pointer;
+      box-shadow: 0 7px 0 rgba(116, 78, 38, .18);
+      transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+    }
+
+    .choice-option:hover,
+    .choice-option:focus {
+      border-color: #4a9f4a;
+      outline: none;
+      box-shadow: 0 7px 0 rgba(63, 138, 57, .2), 0 0 0 5px rgba(94, 173, 87, .16);
+    }
+
+    .choice-option:active {
+      transform: translateY(5px);
+      box-shadow: 0 2px 0 rgba(116, 78, 38, .18);
+    }
+
+    .choice-option.correct {
+      border-color: #65aa4e;
+      background: #dff0b1;
+    }
+
+    .choice-option.wrong {
+      border-color: #d85b4f;
+      background: #ffe1dc;
+    }
+
+    .choice-option:disabled {
+      cursor: default;
+      opacity: .82;
     }
 
     .controls {
@@ -569,6 +632,8 @@
       .q-num { margin-top: -50px; font-size: 19px; padding: 9px 24px; }
       .answer-panel { padding: 14px; border-radius: 24px; }
       input { min-height: 62px; border-radius: 16px; }
+      .choice-grid { grid-template-columns: 1fr; gap: 10px; }
+      .choice-option { min-height: 60px; border-radius: 18px; font-size: 20px; }
       .controls { grid-template-columns: 1fr; }
       .btn { min-height: 58px; border-radius: 18px; }
       .words { grid-template-columns: 1fr; max-height: 320px; }
@@ -640,9 +705,11 @@
       </section>
 
       <section class="answer-panel">
+        <div class="mode-badge" id="modeBadge">选择正确马来文</div>
         <div class="answer-row">
           <input id="answerInput" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="在这里输入 ejaan..." />
         </div>
+        <div class="choice-grid hidden" id="choiceGrid"></div>
         <div class="controls">
           <button class="btn check" id="checkBtn">检查答案</button>
           <button class="btn hint" id="hintBtn">提示 Hint</button>
@@ -654,9 +721,9 @@
       <section class="word-list" id="wordList">
         <div class="list-head">
           <h2>单词列表（共 17 题）</h2>
-          <button class="toggle" id="toggleWords">收起</button>
+          <button class="toggle" id="toggleWords">展开</button>
         </div>
-        <div class="words" id="words"></div>
+        <div class="words hidden" id="words"></div>
       </section>
 
       <div class="parent-note">
@@ -706,7 +773,9 @@
     let streak = 0;
     let snacks = 0;
     let answered = new Set();
-    let showingWords = true;
+    let showingWords = false;
+    let modes = [];
+    let currentChoices = [];
     let soundOn = false;
     let audioCtx = null;
     const cheers = ["太棒了！水豚过河啦！", "答对了！收集 1 个小橙子！", "Nice! 继续冲下一题！", "好厉害，ejaan 越来越稳！", "Combo! 水豚开心跳一下！"];
@@ -718,6 +787,23 @@
       const parts = word.split("=").map(part => normalize(part));
       return [...new Set([full, ...parts])];
     };
+
+    function shuffleArray(items) {
+      return [...items].sort(() => Math.random() - .5);
+    }
+
+    function buildModes() {
+      modes = words.map((_, i) => i % 3 === 1 ? "type" : "choose");
+    }
+
+    function currentMode() {
+      return modes[index] || "choose";
+    }
+
+    function makeChoices(correctWord) {
+      const others = words.map(item => item.word).filter(word => word !== correctWord);
+      return shuffleArray([correctWord, ...shuffleArray(others).slice(0, 3)]);
+    }
 
     function ensureAudio() {
       if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -824,6 +910,16 @@
       });
     }
 
+    function renderChoices(item) {
+      currentChoices = makeChoices(item.word);
+      $("choiceGrid").innerHTML = currentChoices.map((choice, i) => `
+        <button class="choice-option" type="button" data-choice="${i}">${choice}</button>
+      `).join("");
+      document.querySelectorAll(".choice-option").forEach(btn => {
+        btn.addEventListener("click", () => checkChoice(currentChoices[Number(btn.dataset.choice)], btn));
+      });
+    }
+
     function updateCapy() {
       const percent = Math.min(82, 6 + index * (76 / (words.length - 1)));
       $("capy").style.setProperty("--capy-x", `${percent}%`);
@@ -843,11 +939,26 @@
       $("answerInput").value = "";
       $("feedback").textContent = "";
       $("feedback").className = "feedback";
-      $("hintLine").textContent = "看意思，拼出正确 ejaan！";
+      const isChoose = currentMode() === "choose";
+      $("hintLine").textContent = isChoose ? "看华文意思，点选正确的马来文！" : "看意思，拼出正确 ejaan！";
+      $("modeBadge").textContent = isChoose ? "选择题：找马来文" : "打字题：拼 ejaan";
+      document.querySelector(".answer-row").classList.toggle("hidden", isChoose);
+      $("choiceGrid").classList.toggle("hidden", !isChoose);
+      $("checkBtn").classList.toggle("hidden", isChoose);
+      if (isChoose) {
+        renderChoices(item);
+      } else {
+        $("choiceGrid").innerHTML = "";
+      }
       renderDots();
       renderWords();
       updateCapy();
-      $("answerInput").focus({ preventScroll: true });
+      if (isChoose) {
+        const firstChoice = document.querySelector(".choice-option");
+        if (firstChoice) firstChoice.focus({ preventScroll: true });
+      } else {
+        $("answerInput").focus({ preventScroll: true });
+      }
     }
 
     function celebrate(message) {
@@ -868,6 +979,7 @@
     }
 
     function checkAnswer() {
+      if (currentMode() === "choose") return;
       const item = words[index];
       const answer = normalize($("answerInput").value);
       const choices = acceptedAnswers(item.word);
@@ -907,8 +1019,51 @@
       $("score").textContent = score;
     }
 
+    function checkChoice(selected, button) {
+      const item = words[index];
+      const ok = acceptedAnswers(item.word).includes(normalize(selected));
+      document.querySelectorAll(".choice-option").forEach(btn => {
+        btn.disabled = true;
+        const choice = currentChoices[Number(btn.dataset.choice)];
+        if (acceptedAnswers(item.word).includes(normalize(choice))) btn.classList.add("correct");
+      });
+      if (ok) {
+        if (!answered.has(index)) {
+          streak += 1;
+          snacks += 1;
+          score += 10 + Math.max(0, streak - 1) * 2;
+          answered.add(index);
+        }
+        const cheer = cheers[Math.floor(Math.random() * cheers.length)];
+        $("feedback").textContent = `${cheer} +${10 + Math.max(0, streak - 1) * 2} 分`;
+        $("feedback").className = "feedback good";
+        $("streak").textContent = `${streak} 连对`;
+        $("snacks").textContent = snacks;
+        $("score").textContent = score;
+        playSound("correct");
+        celebrate(cheer);
+        window.setTimeout(nextQuestion, 750);
+      } else {
+        streak = 0;
+        $("streak").textContent = "0 连对";
+        button.classList.add("wrong");
+        $("feedback").textContent = `再看一次华文意思。正确答案：${item.word}。请读 3 次。`;
+        $("feedback").className = "feedback bad";
+        document.querySelector(".answer-panel").classList.remove("shake");
+        void document.querySelector(".answer-panel").offsetWidth;
+        document.querySelector(".answer-panel").classList.add("shake");
+        playSound("wrong");
+      }
+    }
+
     function showHint() {
       const item = words[index].word;
+      if (currentMode() === "choose") {
+        $("feedback").textContent = `提示：答案第一个字母是 ${item.trim()[0].toUpperCase()}。`;
+        $("feedback").className = "feedback";
+        playSound("hint");
+        return;
+      }
       const clean = item.replace(/\s*=\s*/g, " = ");
       const hint = clean.split("").map((ch, i) => {
         if (ch === " " || ch === "=") return ch;
@@ -941,6 +1096,7 @@
       streak = 0;
       snacks = 0;
       answered = new Set();
+      buildModes();
       update();
     }
 
@@ -951,6 +1107,7 @@
       streak = 0;
       snacks = 0;
       answered = new Set();
+      buildModes();
       celebrate("新的路线开始啦！");
       playSound("hint");
       update();
@@ -971,6 +1128,7 @@
       $("toggleWords").textContent = showingWords ? "收起" : "展开";
     });
 
+    buildModes();
     renderDots();
     renderWords();
     update();
