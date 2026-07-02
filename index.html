@@ -196,6 +196,65 @@
       color: #8a5d25;
     }
 
+    .game-tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .game-tab {
+      min-height: 64px;
+      border: 3px solid #e1ad49;
+      border-radius: 22px;
+      background: #fffaf0;
+      color: #6b4424;
+      font-size: clamp(17px, 3vw, 24px);
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 6px 0 rgba(142, 93, 30, .16);
+    }
+
+    .game-tab.active {
+      border-color: #4a9f4a;
+      background: linear-gradient(180deg, #e8f6bc, #b9df77);
+      color: #315f28;
+    }
+
+    .timer-card {
+      margin-top: 12px;
+      padding: 12px 16px;
+      border: 3px solid #e4bf75;
+      border-radius: 22px;
+      background: rgba(255, 253, 247, .92);
+    }
+
+    .timer-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: #684423;
+      font-size: 20px;
+      font-weight: 900;
+    }
+
+    .timer-track {
+      height: 18px;
+      margin-top: 10px;
+      border: 2px solid #d9b776;
+      border-radius: 999px;
+      overflow: hidden;
+      background: #fff8e8;
+    }
+
+    .timer-fill {
+      width: 100%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #65bb5b, #ffd25f, #ef6b5d);
+      transition: width .25s linear;
+    }
+
     .river-scene {
       position: relative;
       min-height: 340px;
@@ -467,6 +526,60 @@
       animation: shake .3s ease;
     }
 
+    .match-game {
+      border: 4px solid #df9d28;
+      border-radius: 30px;
+      padding: 22px;
+      background: rgba(255, 253, 247, .94);
+      box-shadow: var(--shadow);
+    }
+
+    .match-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+      color: #5d3b21;
+      font-size: clamp(18px, 3vw, 24px);
+      font-weight: 900;
+    }
+
+    .match-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .match-card {
+      min-height: 86px;
+      padding: 10px;
+      border: 4px solid #e4bf75;
+      border-radius: 20px;
+      background: #fff8e8;
+      color: #4a2f1d;
+      font-size: clamp(16px, 2.6vw, 24px);
+      font-weight: 900;
+      line-height: 1.15;
+      cursor: pointer;
+      box-shadow: 0 7px 0 rgba(116, 78, 38, .18);
+    }
+
+    .match-card.selected {
+      border-color: #4a9f4a;
+      background: #e8f6bc;
+      transform: translateY(3px);
+      box-shadow: 0 4px 0 rgba(63, 138, 57, .2);
+    }
+
+    .match-card.matched {
+      border-color: #65aa4e;
+      background: #dff0b1;
+      color: #315f28;
+      cursor: default;
+      box-shadow: none;
+    }
+
     .celebration {
       position: fixed;
       inset: auto 18px 24px;
@@ -616,6 +729,8 @@
       .score small { font-size: 12px; }
       .score strong { font-size: 24px; }
       .mission-bar { grid-template-columns: 1fr; gap: 9px; }
+      .game-tabs { grid-template-columns: 1fr; gap: 9px; }
+      .game-tab { min-height: 54px; border-radius: 18px; }
       .mission-chip { min-height: 58px; border-radius: 18px; padding: 8px; gap: 7px; }
       .mission-chip span { font-size: 22px; }
       .mission-chip strong { font-size: 18px; }
@@ -636,6 +751,10 @@
       .choice-option { min-height: 60px; border-radius: 18px; font-size: 20px; }
       .controls { grid-template-columns: 1fr; }
       .btn { min-height: 58px; border-radius: 18px; }
+      .match-game { padding: 14px; border-radius: 24px; }
+      .match-head { align-items: flex-start; flex-direction: column; }
+      .match-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .match-card { min-height: 70px; border-radius: 16px; font-size: 18px; }
       .words { grid-template-columns: 1fr; max-height: 320px; }
       .word-item { font-size: 17px; }
       .parent-note { align-items: flex-start; border-radius: 22px; font-size: 16px; }
@@ -670,6 +789,20 @@
       <button class="mission-chip" id="soundBtn" type="button"><span id="soundIcon">🔇</span><div><strong id="soundLabel">开启音效</strong><small>可爱叮咚声</small></div></button>
     </section>
 
+    <section class="game-tabs" aria-label="游戏模式">
+      <button class="game-tab active" id="trainTab" type="button">闯关练习</button>
+      <button class="game-tab" id="speedTab" type="button">闪电挑战</button>
+      <button class="game-tab" id="matchTab" type="button">配对卡片</button>
+    </section>
+
+    <section class="timer-card hidden" id="timerCard" aria-label="倒计时">
+      <div class="timer-head">
+        <span id="timerTitle">45 秒闪电挑战</span>
+        <span id="timerValue">45s</span>
+      </div>
+      <div class="timer-track"><div class="timer-fill" id="timerFill"></div></div>
+    </section>
+
     <section class="river-scene" aria-label="水豚过河路线">
       <svg class="capy" id="capy" viewBox="0 0 220 190" role="img" aria-label="水豚">
         <ellipse cx="98" cy="163" rx="86" ry="20" fill="#77c8c4"/>
@@ -697,14 +830,14 @@
     </section>
 
     <main>
-      <section class="question">
+      <section class="question" id="questionCard">
         <div class="q-num" id="questionNum">第 1 题</div>
         <div class="meaning" id="meaning">形状</div>
         <div class="pinyin" id="pinyin">(xíng zhuàng)</div>
         <div class="hint-line" id="hintLine">读一读意思，然后拼出正确的 ejaan 吧！</div>
       </section>
 
-      <section class="answer-panel">
+      <section class="answer-panel" id="answerPanel">
         <div class="mode-badge" id="modeBadge">选择正确马来文</div>
         <div class="answer-row">
           <input id="answerInput" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="在这里输入 ejaan..." />
@@ -716,6 +849,14 @@
           <button class="btn next" id="nextBtn">下一题</button>
         </div>
         <div class="feedback" id="feedback" aria-live="polite"></div>
+      </section>
+
+      <section class="match-game hidden" id="matchGame">
+        <div class="match-head">
+          <span>找朋友：点一个华文，再点它的马来文</span>
+          <span id="matchStatus">0 / 6 对</span>
+        </div>
+        <div class="match-grid" id="matchGrid"></div>
       </section>
 
       <section class="word-list" id="wordList">
@@ -776,6 +917,12 @@
     let showingWords = false;
     let modes = [];
     let currentChoices = [];
+    let gameMode = "train";
+    let timeLeft = 45;
+    let timerId = null;
+    let matchPairs = [];
+    let selectedMatch = null;
+    let matchedPairs = new Set();
     let soundOn = false;
     let audioCtx = null;
     const cheers = ["太棒了！水豚过河啦！", "答对了！收集 1 个小橙子！", "Nice! 继续冲下一题！", "好厉害，ejaan 越来越稳！", "Combo! 水豚开心跳一下！"];
@@ -793,6 +940,10 @@
     }
 
     function buildModes() {
+      if (gameMode === "speed") {
+        modes = words.map(() => "choose");
+        return;
+      }
       modes = words.map((_, i) => i % 3 === 1 ? "type" : "choose");
     }
 
@@ -803,6 +954,66 @@
     function makeChoices(correctWord) {
       const others = words.map(item => item.word).filter(word => word !== correctWord);
       return shuffleArray([correctWord, ...shuffleArray(others).slice(0, 3)]);
+    }
+
+    function resetScore() {
+      index = 0;
+      score = 0;
+      streak = 0;
+      snacks = 0;
+      answered = new Set();
+    }
+
+    function setMode(mode) {
+      gameMode = mode;
+      stopTimer();
+      resetScore();
+      words = mode === "speed" ? shuffleArray(baseWords) : [...baseWords];
+      buildModes();
+      $("trainTab").classList.toggle("active", mode === "train");
+      $("speedTab").classList.toggle("active", mode === "speed");
+      $("matchTab").classList.toggle("active", mode === "match");
+      $("timerCard").classList.toggle("hidden", mode !== "speed");
+      $("questionCard").classList.toggle("hidden", mode === "match");
+      $("answerPanel").classList.toggle("hidden", mode === "match");
+      $("matchGame").classList.toggle("hidden", mode !== "match");
+      if (mode === "speed") {
+        timeLeft = 45;
+        startTimer();
+        celebrate("45 秒闪电挑战开始！");
+      } else if (mode === "match") {
+        setupMatchGame();
+        celebrate("配对卡片开始！");
+      }
+      update();
+    }
+
+    function startTimer() {
+      updateTimer();
+      timerId = window.setInterval(() => {
+        timeLeft -= 1;
+        updateTimer();
+        if (timeLeft <= 0) finishSpeedRound();
+      }, 1000);
+    }
+
+    function stopTimer() {
+      if (timerId) window.clearInterval(timerId);
+      timerId = null;
+    }
+
+    function updateTimer() {
+      $("timerValue").textContent = `${Math.max(0, timeLeft)}s`;
+      $("timerFill").style.width = `${Math.max(0, timeLeft / 45 * 100)}%`;
+    }
+
+    function finishSpeedRound() {
+      stopTimer();
+      $("feedback").textContent = `时间到！得分 ${score}，连对最高可以继续挑战。`;
+      $("feedback").className = "feedback good";
+      document.querySelectorAll(".choice-option").forEach(btn => btn.disabled = true);
+      playSound("finish");
+      celebrate(`时间到！得分 ${score}`);
     }
 
     function ensureAudio() {
@@ -920,6 +1131,68 @@
       });
     }
 
+    function setupMatchGame() {
+      const picked = shuffleArray(baseWords).slice(0, 6);
+      matchPairs = shuffleArray(picked.flatMap((item, pair) => [
+        { pair, type: "meaning", text: item.meaning },
+        { pair, type: "word", text: item.word }
+      ]));
+      selectedMatch = null;
+      matchedPairs = new Set();
+      renderMatchCards();
+    }
+
+    function renderMatchCards() {
+      $("matchStatus").textContent = `${matchedPairs.size} / 6 对`;
+      $("matchGrid").innerHTML = matchPairs.map((card, i) => {
+        const matched = matchedPairs.has(card.pair);
+        const selected = selectedMatch === i;
+        return `<button class="match-card ${matched ? "matched" : ""} ${selected ? "selected" : ""}" type="button" data-card="${i}" ${matched ? "disabled" : ""}>${card.text}</button>`;
+      }).join("");
+      document.querySelectorAll(".match-card").forEach(btn => {
+        btn.addEventListener("click", () => chooseMatchCard(Number(btn.dataset.card)));
+      });
+    }
+
+    function chooseMatchCard(cardIndex) {
+      const card = matchPairs[cardIndex];
+      if (!card || matchedPairs.has(card.pair)) return;
+      if (selectedMatch === null) {
+        selectedMatch = cardIndex;
+        renderMatchCards();
+        playSound("click");
+        return;
+      }
+      const first = matchPairs[selectedMatch];
+      if (selectedMatch === cardIndex) {
+        selectedMatch = null;
+        renderMatchCards();
+        return;
+      }
+      if (first.pair === card.pair && first.type !== card.type) {
+        matchedPairs.add(card.pair);
+        selectedMatch = null;
+        score += 12 + matchedPairs.size;
+        snacks += 1;
+        streak += 1;
+        $("score").textContent = score;
+        $("snacks").textContent = snacks;
+        $("streak").textContent = `${streak} 连对`;
+        renderMatchCards();
+        playSound("correct");
+        if (matchedPairs.size === 6) {
+          celebrate(`配对完成！得分 ${score}`);
+          playSound("finish");
+        }
+      } else {
+        selectedMatch = null;
+        streak = 0;
+        $("streak").textContent = "0 连对";
+        playSound("wrong");
+        renderMatchCards();
+      }
+    }
+
     function updateCapy() {
       const percent = Math.min(82, 6 + index * (76 / (words.length - 1)));
       $("capy").style.setProperty("--capy-x", `${percent}%`);
@@ -928,6 +1201,16 @@
     }
 
     function update() {
+      if (gameMode === "match") {
+        $("progressLabel").textContent = "配对卡片";
+        $("score").textContent = score;
+        $("streak").textContent = `${streak} 连对`;
+        $("snacks").textContent = snacks;
+        renderDots();
+        renderWords();
+        updateCapy();
+        return;
+      }
       const item = words[index];
       $("questionNum").textContent = `第 ${index + 1} 题`;
       $("meaning").textContent = item.meaning;
@@ -940,8 +1223,8 @@
       $("feedback").textContent = "";
       $("feedback").className = "feedback";
       const isChoose = currentMode() === "choose";
-      $("hintLine").textContent = isChoose ? "看华文意思，点选正确的马来文！" : "看意思，拼出正确 ejaan！";
-      $("modeBadge").textContent = isChoose ? "选择题：找马来文" : "打字题：拼 ejaan";
+      $("hintLine").textContent = gameMode === "speed" ? "闪电挑战：看华文，快点选马来文！" : isChoose ? "看华文意思，点选正确的马来文！" : "看意思，拼出正确 ejaan！";
+      $("modeBadge").textContent = gameMode === "speed" ? "闪电题：越快越高分" : isChoose ? "选择题：找马来文" : "打字题：拼 ejaan";
       document.querySelector(".answer-row").classList.toggle("hidden", isChoose);
       $("choiceGrid").classList.toggle("hidden", !isChoose);
       $("checkBtn").classList.toggle("hidden", isChoose);
@@ -1020,6 +1303,7 @@
     }
 
     function checkChoice(selected, button) {
+      if (gameMode === "speed" && timeLeft <= 0) return;
       const item = words[index];
       const ok = acceptedAnswers(item.word).includes(normalize(selected));
       document.querySelectorAll(".choice-option").forEach(btn => {
@@ -1031,28 +1315,40 @@
         if (!answered.has(index)) {
           streak += 1;
           snacks += 1;
-          score += 10 + Math.max(0, streak - 1) * 2;
+          const basePoint = gameMode === "speed" ? 15 : 10;
+          score += basePoint + Math.max(0, streak - 1) * 3;
           answered.add(index);
         }
         const cheer = cheers[Math.floor(Math.random() * cheers.length)];
-        $("feedback").textContent = `${cheer} +${10 + Math.max(0, streak - 1) * 2} 分`;
+        $("feedback").textContent = gameMode === "speed" ? `快！${cheer}` : `${cheer}`;
         $("feedback").className = "feedback good";
         $("streak").textContent = `${streak} 连对`;
         $("snacks").textContent = snacks;
         $("score").textContent = score;
         playSound("correct");
-        celebrate(cheer);
-        window.setTimeout(nextQuestion, 750);
+        if (streak % 5 === 0) {
+          timeLeft = Math.min(45, timeLeft + 5);
+          updateTimer();
+          celebrate(`连对 ${streak}！+5 秒`);
+        } else {
+          celebrate(cheer);
+        }
+        window.setTimeout(nextQuestion, gameMode === "speed" ? 360 : 750);
       } else {
         streak = 0;
+        if (gameMode === "speed") {
+          timeLeft = Math.max(0, timeLeft - 3);
+          updateTimer();
+        }
         $("streak").textContent = "0 连对";
         button.classList.add("wrong");
-        $("feedback").textContent = `再看一次华文意思。正确答案：${item.word}。请读 3 次。`;
+        $("feedback").textContent = gameMode === "speed" ? `错了！答案：${item.word}` : `再看一次华文意思。正确答案：${item.word}。请读 3 次。`;
         $("feedback").className = "feedback bad";
         document.querySelector(".answer-panel").classList.remove("shake");
         void document.querySelector(".answer-panel").offsetWidth;
         document.querySelector(".answer-panel").classList.add("shake");
         playSound("wrong");
+        if (gameMode === "speed") window.setTimeout(nextQuestion, 600);
       }
     }
 
@@ -1077,8 +1373,15 @@
 
     function nextQuestion() {
       playSound("click");
+      if (gameMode === "speed" && timeLeft <= 0) return;
       if (index < words.length - 1) {
         index += 1;
+        update();
+      } else if (gameMode === "speed") {
+        words = shuffleArray(baseWords);
+        index = 0;
+        answered = new Set();
+        buildModes();
         update();
       } else {
         $("feedback").textContent = `完成啦！今天得分 ${score}。可以给孩子一个小奖励。`;
@@ -1090,24 +1393,23 @@
 
     function restart() {
       playSound("click");
-      words = [...baseWords];
-      index = 0;
-      score = 0;
-      streak = 0;
-      snacks = 0;
-      answered = new Set();
+      stopTimer();
+      words = gameMode === "speed" ? shuffleArray(baseWords) : [...baseWords];
+      resetScore();
       buildModes();
+      if (gameMode === "speed") {
+        timeLeft = 45;
+        startTimer();
+      }
+      if (gameMode === "match") setupMatchGame();
       update();
     }
 
     function shuffleGame() {
       words = [...baseWords].sort(() => Math.random() - .5);
-      index = 0;
-      score = 0;
-      streak = 0;
-      snacks = 0;
-      answered = new Set();
+      resetScore();
       buildModes();
+      if (gameMode === "match") setupMatchGame();
       celebrate("新的路线开始啦！");
       playSound("hint");
       update();
@@ -1119,6 +1421,9 @@
     $("restartBtn").addEventListener("click", restart);
     $("shuffleBtn").addEventListener("click", shuffleGame);
     $("soundBtn").addEventListener("click", toggleSound);
+    $("trainTab").addEventListener("click", () => setMode("train"));
+    $("speedTab").addEventListener("click", () => setMode("speed"));
+    $("matchTab").addEventListener("click", () => setMode("match"));
     $("answerInput").addEventListener("keydown", (event) => {
       if (event.key === "Enter") checkAnswer();
     });
